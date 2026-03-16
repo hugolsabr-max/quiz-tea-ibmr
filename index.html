@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz TEA — Portal IBMR 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+  }
+  
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  /* START SCREEN */
+  #start-screen {
+    text-align: center;
+    animation: fadeIn 0.6s ease;
+  }
+  
+  #start-screen h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #e94560, #ff6b6b, #ffd93d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  #start-screen .subtitle {
+    font-size: 1.1rem;
+    color: #a8b2d1;
+    margin-bottom: 30px;
+  }
+  
+  #start-screen .info-box {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+  
+  #start-screen .info-box p { margin-bottom: 8px; color: #ccd6f6; font-size: 0.95rem; }
+  #start-screen .info-box strong { color: #ffd93d; }
+  
+  .btn-start {
+    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    color: #fff;
+    border: none;
+    padding: 18px 48px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(233,69,96,0.4);
+  }
+  
+  .btn-start:hover { transform: scale(1.05); box-shadow: 0 6px 30px rgba(233,69,96,0.6); }
+  
+  /* QUIZ SCREEN */
+  #quiz-screen { display: none; animation: fadeIn 0.4s ease; }
+  
+  .progress-bar {
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    height: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e94560, #ffd93d);
+    border-radius: 20px;
+    transition: width 0.5s ease;
+  }
+  
+  .question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .question-num {
+    font-size: 0.85rem;
+    color: #a8b2d1;
+    font-weight: 600;
+  }
+  
+  .timer {
+    background: rgba(233,69,96,0.2);
+    color: #ff6b6b;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    min-width: 60px;
+    text-align: center;
+    transition: background 0.3s;
+  }
+  
+  .timer.warning { background: rgba(233,69,96,0.5); color: #fff; animation: pulse 0.5s infinite; }
+  
+  .question-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 24px;
+    color: #e6f1ff;
+  }
+  
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  
+  .option-btn {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    color: #ccd6f6;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .option-btn:hover:not(.disabled) {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.3);
+    transform: translateX(4px);
+  }
+  
+  .option-btn .letter {
+    background: rgba(255,255,255,0.1);
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+  }
+  
+  .option-btn.correct {
+    background: rgba(46,213,115,0.2) !important;
+    border-color: #2ed573 !important;
+    color: #fff !important;
+  }
+  .option-btn.correct .letter { background: #2ed573; color: #1a1a2e; }
+  
+  .option-btn.wrong {
+    background: rgba(233,69,96,0.2) !important;
+    border-color: #e94560 !important;
+    color: #fff !important;
+  }
+  .option-btn.wrong .letter { background: #e94560; color: #fff; }
+  
+  .option-btn.disabled { cursor: default; opacity: 0.6; }
+  .option-btn.disabled.correct { opacity: 1; }
+  
+  .explanation {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: rgba(255,217,61,0.1);
+    border-left: 3px solid #ffd93d;
+    border-radius: 0 12px 12px 0;
+    font-size: 0.9rem;
+    color: #ffd93d;
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+  
+  .btn-next {
+    margin-top: 24px;
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    border: 2px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 14px 36px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+    width: 100%;
+  }
+  
+  .btn-next:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.4); }
+  
+  /* RESULT SCREEN */
+  #result-screen { display: none; text-align: center; animation: fadeIn 0.6s ease; }
+  
+  .result-emoji { font-size: 4rem; margin-bottom: 16px; }
+  
+  .result-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  
+  .result-score {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, #ffd93d, #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 16px 0;
+  }
+  
+  .result-message {
+    font-size: 1.1rem;
+    color: #a8b2d1;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  
+  .result-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  
+  .stat { text-align: center; }
+  .stat-num { font-size: 1.5rem; font-weight: 800; }
+  .stat-label { font-size: 0.8rem; color: #a8b2d1; margin-top: 4px; }
+  .stat-correct .stat-num { color: #2ed573; }
+  .stat-wrong .stat-num { color: #e94560; }
+  
+  .btn-restart {
+    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    color: #fff;
+    border: none;
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 4px 20px rgba(233,69,96,0.4);
+  }
+  
+  .btn-restart:hover { transform: scale(1.05); }
+  
+  .credits {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+  
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+  
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    top: -10px;
+    animation: confettiFall linear forwards;
+    z-index: 1000;
+  }
+  @keyframes confettiFall {
+    to { top: 110vh; transform: rotate(720deg); }
+  }
+  
+  @media (max-width: 480px) {
+    .container { padding: 16px; }
+    #start-screen h1 { font-size: 1.6rem; }
+    .question-text { font-size: 1.05rem; }
+    .option-btn { padding: 14px 16px; font-size: 0.9rem; }
+    .result-score { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- START SCREEN -->
+  <div id="start-screen">
+    <h1>🧩 Quiz TEA</h1>
+    <p class="subtitle">Portal IBMR 2026</p>
+    <div class="info-box">
+      <p>📋 <strong>10 perguntas</strong> de múltipla escolha</p>
+      <p>⏱️ <strong>20 segundos</strong> por pergunta</p>
+      <p>🎯 Teste seus conhecimentos sobre o <strong>Transtorno do Espectro Autista</strong></p>
+      <p>📱 Funciona no celular e computador</p>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">Começar Quiz ▶</button>
+  </div>
+  
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="question-header">
+      <span class="question-num" id="q-num"></span>
+      <span class="timer" id="timer">20s</span>
+    </div>
+    <div class="question-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div class="explanation" id="explanation"></div>
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">Próxima →</button>
+  </div>
+  
+  <!-- RESULT SCREEN -->
+  <div id="result-screen">
+    <div class="result-emoji" id="result-emoji"></div>
+    <div class="result-title">Quiz Finalizado!</div>
+    <div class="result-score" id="result-score"></div>
+    <div class="result-message" id="result-msg"></div>
+    <div class="result-stats">
+      <div class="stat stat-correct">
+        <div class="stat-num" id="stat-correct">0</div>
+        <div class="stat-label">Acertos</div>
+      </div>
+      <div class="stat stat-wrong">
+        <div class="stat-num" id="stat-wrong">0</div>
+        <div class="stat-label">Erros</div>
+      </div>
+    </div>
+    <button class="btn-restart" onclick="restartQuiz()">Jogar Novamente 🔄</button>
+    <div class="credits">
+      Portal TEA — IBMR 2026 · Psicologia · Trabalho Acadêmico
+    </div>
+  </div>
+  
+</div>
+
+<script>
+const questions = [
+  {
+    text: "O que significa a sigla TEA?",
+    options: [
+      "Transtorno Emocional Adulto",
+      "Transtorno de Expressão e Afeto",
+      "Transtorno do Espectro Autista",
+      "Tendência de Estímulo Atípico"
+    ],
+    correct: 2,
+    explanation: "TEA = Transtorno do Espectro Autista, termo adotado pelo DSM-5 em 2013."
+  },
+  {
+    text: "Segundo o DSM-5, o TEA é classificado como:",
+    options: [
+      "Transtorno de personalidade",
+      "Doença psiquiátrica adquirida",
+      "Transtorno do neurodesenvolvimento",
+      "Deficiência intelectual obrigatória"
+    ],
+    correct: 2,
+    explanation: "O DSM-5 classifica o TEA como um Transtorno do Neurodesenvolvimento."
+  },
+  {
+    text: "A Lei 12.764/2012 (Lei Berenice Piana) garante às pessoas com TEA:",
+    options: [
+      "Apenas direito à aposentadoria especial",
+      "Direito à educação inclusiva, atendimento multiprofissional e acesso à rede de saúde",
+      "Somente isenção de impostos para os pais",
+      "Direito exclusivo a escolas especiais"
+    ],
+    correct: 1,
+    explanation: "A Lei Berenice Piana instituiu a Política Nacional de Proteção dos Direitos da Pessoa com TEA."
+  },
+  {
+    text: "Qual dado sobre TEA no Brasil é CORRETO?",
+    options: [
+      "Afeta 1 em cada 1.000 crianças",
+      "É mais comum em meninas do que em meninos",
+      "Estima-se que cerca de 2 milhões de brasileiros tenham TEA",
+      "O diagnóstico costuma ocorrer antes dos 18 meses"
+    ],
+    correct: 2,
+    explanation: "Com base na prevalência do CDC (1 em 36), estima-se que ~2 milhões de brasileiros tenham TEA."
+  },
+  {
+    text: 'O "mascaramento" no TEA refere-se a:',
+    options: [
+      "O uso de máscaras em terapias lúdicas",
+      'A estratégia de imitar comportamentos neurotípicos para "se encaixar"',
+      "A cobertura do TEA por planos de saúde",
+      "Um tipo de intervenção terapêutica específica"
+    ],
+    correct: 1,
+    explanation: "O mascaramento (masking/camouflaging) é a supressão de comportamentos autísticos para parecer neurotípico."
+  },
+  {
+    text: "Qual dessas afirmações sobre TEA é um MITO?",
+    options: [
+      "Pessoas com TEA podem ter habilidades excepcionais em áreas específicas",
+      "O TEA é causado pela vacina tríplice viral",
+      "O diagnóstico pode ocorrer em qualquer faixa etária",
+      "Pessoas com TEA sentem emoções, mas expressam de forma diferente"
+    ],
+    correct: 1,
+    explanation: "O estudo que ligava vacinas ao autismo (Wakefield, 1998) foi retratado e comprovado como fraude."
+  },
+  {
+    text: "Na perspectiva da interseccionalidade, meninas com TEA tendem a:",
+    options: [
+      "Receber diagnóstico mais cedo que meninos",
+      "Apresentar sintomas mais graves",
+      "Ser diagnosticadas mais tarde que meninos, em média",
+      "Ter maior acesso a serviços especializados"
+    ],
+    correct: 2,
+    explanation: "Meninas costumam ser diagnosticadas mais tarde devido ao mascaramento e critérios baseados em perfis masculinos."
+  },
+  {
+    text: "Qual é o período mais favorável para iniciar intervenções terapêuticas no TEA?",
+    options: [
+      "Após os 6 anos de idade",
+      "Na adolescência, quando os sintomas ficam mais claros",
+      "O quanto antes — os primeiros anos de vida são os mais críticos",
+      "Apenas após avaliação completa de um neurologista adulto"
+    ],
+    correct: 2,
+    explanation: "A intervenção precoce aproveita a neuroplasticidade dos primeiros anos de vida."
+  },
+  {
+    text: "A Carteira de Identificação da Pessoa com TEA (CIPTEA) foi criada pela:",
+    options: [
+      "Lei 12.764/2012 — Lei Berenice Piana",
+      "Lei 13.977/2020 — Lei Romeo Mion",
+      "Lei 9.394/1996 — LDB",
+      "Lei 8.069/1990 — ECA"
+    ],
+    correct: 1,
+    explanation: "A Lei Romeo Mion (13.977/2020) criou a CIPTEA para facilitar a identificação e acesso a direitos."
+  },
+  {
+    text: "Qual dessas características NÃO é necessária para diagnóstico de TEA segundo o DSM-5?",
+    options: [
+      "Dificuldades persistentes na comunicação social",
+      "Padrões restritos e repetitivos de comportamento",
+      "Hipersensibilidade ou hipossensibilidade sensorial",
+      "Baixo quociente intelectual (QI)"
+    ],
+    correct: 3,
+    explanation: "QI baixo NÃO é critério para TEA. Pessoas autistas podem ter QI de qualquer faixa."
+  }
+];
+
+let current = 0;
+let score = 0;
+let timerInterval = null;
+let timeLeft = 20;
+let answered = false;
+
+function startQuiz() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  current = 0;
+  score = 0;
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+  const q = questions[current];
+  document.getElementById('q-num').textContent = `Pergunta ${current + 1} de ${questions.length}`;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('progress').style.width = ((current) / questions.length * 100) + '%';
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+  
+  const optDiv = document.getElementById('options');
+  optDiv.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    optDiv.appendChild(btn);
+  });
+  
+  // Timer
+  timeLeft = 20;
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = '20s';
+  timerEl.classList.remove('warning');
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = timeLeft + 's';
+    if (timeLeft <= 5) timerEl.classList.add('warning');
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      selectAnswer(-1); // time's up
+    }
+  }, 1000);
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  
+  const q = questions[current];
+  const btns = document.querySelectorAll('.option-btn');
+  
+  btns.forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if (i === q.correct) btn.classList.add('correct');
+    if (i === idx && idx !== q.correct) btn.classList.add('wrong');
+  });
+  
+  if (idx === q.correct) score++;
+  
+  document.getElementById('explanation').textContent = (idx === -1 ? '⏰ Tempo esgotado! ' : '') + q.explanation;
+  document.getElementById('explanation').style.display = 'block';
+  
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.textContent = current < questions.length - 1 ? 'Próxima →' : 'Ver Resultado 🏆';
+  nextBtn.style.display = 'block';
+}
+
+function nextQuestion() {
+  current++;
+  if (current < questions.length) {
+    showQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+  
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('result-score').textContent = `${score}/${questions.length} (${pct}%)`;
+  document.getElementById('stat-correct').textContent = score;
+  document.getElementById('stat-wrong').textContent = questions.length - score;
+  
+  let emoji, msg;
+  if (pct >= 90) { emoji = '🏆'; msg = 'Excelente! Você domina o assunto!'; }
+  else if (pct >= 70) { emoji = '🎉'; msg = 'Muito bem! Bom conhecimento sobre TEA!'; }
+  else if (pct >= 50) { emoji = '👏'; msg = 'Bom esforço! Continue aprendendo sobre TEA.'; }
+  else { emoji = '📚'; msg = 'Que tal revisar o conteúdo? O conhecimento sobre TEA é fundamental!'; }
+  
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-msg').textContent = msg;
+  
+  if (pct >= 70) launchConfetti();
+}
+
+function restartQuiz() {
+  document.getElementById('result-screen').style.display = 'none';
+  startQuiz();
+}
+
+function launchConfetti() {
+  const colors = ['#e94560','#ff6b6b','#ffd93d','#2ed573','#1e90ff','#a855f7'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    el.style.width = (Math.random() * 8 + 5) + 'px';
+    el.style.height = (Math.random() * 8 + 5) + 'px';
+    el.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+    el.style.animationDelay = (Math.random() * 1) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+</script>
+
+</body>
+</html>
